@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Precificador · NeuraOrb</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #e8ecf2;
+    --surface: #dde3ed;
+    --surface2: #f0f4f9;
+    --border: #b8c4d4;
+    --accent: #1a3a6b;
+    --accent2: #0f2347;
+    --text: #0d1b2e;
+    --text2: #1e2e42;
+    --muted: #5a6e85;
+    --success: #1a6e3e;
+    --shadow: 0 2px 24px rgba(0,0,0,0.10);
+    --c1: #c0392b;
+    --c4: #7d3c98;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+  }
+  header { text-align: center; margin-bottom: 40px; animation: fadeDown 0.7s ease both; background: var(--bg); padding: 24px 16px 8px; border-radius: 16px; }
+  .eyebrow { font-size: 10px; letter-spacing: 6px; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+  header h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(38px,8vw,58px); font-weight: 300; letter-spacing: 2px; color: var(--text); line-height: 1; }
+  header h1 span { color: var(--accent); font-weight: 600; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; max-width: 700px; margin: 0 auto 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+  .tab { flex: 1; padding: 10px; text-align: center; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; border-radius: 9px; cursor: pointer; transition: all 0.2s; color: var(--muted); border: none; background: none; font-family: 'DM Mono', monospace; }
+  .tab.active { background: var(--surface2); color: var(--accent); box-shadow: 0 1px 8px rgba(0,0,0,0.08); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .container { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+  .card { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 28px; box-shadow: var(--shadow); animation: fadeUp 0.6s ease both; }
+  .card:nth-child(1){animation-delay:0.1s} .card:nth-child(2){animation-delay:0.2s} .card:nth-child(3){animation-delay:0.3s}
+
+  .card-title { font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+  .field input { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 16px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .field input:focus { border-color: var(--accent); }
+  .field input::placeholder { color: #b0aa9e; }
+
+  .despesas-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .despesa-row { display: grid; grid-template-columns: 14px 1fr 130px 34px; gap: 8px; align-items: center; animation: fadeUp 0.3s ease both; }
+  .despesa-cor { width: 10px; height: 10px; border-radius: 50%; margin: 0 auto; }
+  .despesa-row input { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; outline: none; transition: border-color 0.2s; width: 100%; }
+  .despesa-row input:focus { border-color: var(--accent); }
+  .despesa-row input::placeholder { color: #b0aa9e; }
+  .despesa-row input.valor { text-align: right; }
+  .btn-remove { background: none; border: 1px solid #e8d4d4; border-radius: 8px; color: #c04040; width: 34px; height: 34px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .btn-remove:hover { background: #fdeaea; }
+  .btn-add { background: none; border: 1.5px dashed var(--border); border-radius: 10px; color: var(--muted); padding: 10px; width: 100%; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; transition: all 0.2s; }
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); background: #e8f0ff; }
+
+  .margem-wrap { display: flex; align-items: center; gap: 16px; }
+  .margem-wrap input[type=range] { flex: 1; -webkit-appearance: none; height: 5px; background: var(--border); border-radius: 3px; outline: none; }
+  .margem-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 2px 8px rgba(26,58,107,0.3); }
+  .margem-valor { font-family: 'Cormorant Garamond', serif; font-size: 32px; color: var(--accent); min-width: 64px; text-align: right; }
+
+  .grafico-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 28px; box-shadow: var(--shadow); animation: fadeUp 0.6s ease 0.4s both; }
+  .grafico-wrap { position: relative; height: 220px; margin-bottom: 16px; }
+  canvas { width: 100% !important; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 12px; }
+  .legenda-item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text2); }
+  .legenda-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .resultado-card { background: linear-gradient(135deg, #e8f0ff, #d0ddf5); border: 1.5px solid var(--accent); border-radius: 16px; padding: 32px 28px; animation: fadeUp 0.6s ease 0.5s both; box-shadow: 0 4px 30px rgba(26,58,107,0.12); }
+  .resultado-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .res-item { text-align: center; }
+  .res-item .r-label { font-size: 9px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .res-item .r-dot { width: 8px; height: 8px; border-radius: 50%; margin: 0 auto 8px; }
+  .res-item .r-value { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--text); }
+  .res-item .r-value.verde { color: var(--success); }
+  .divisor { height: 1px; background: var(--border); margin: 20px 0; }
+  .preco-final-wrap { text-align: center; }
+  .preco-final-label { font-size: 10px; letter-spacing: 5px; color: var(--accent); text-transform: uppercase; margin-bottom: 12px; }
+  .preco-final { font-family: 'Cormorant Garamond', serif; font-size: clamp(52px,12vw,76px); font-weight: 300; color: var(--accent2); letter-spacing: 2px; line-height: 1; transition: transform 0.2s; }
+
+  .btn-calcular { width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 12px; padding: 16px; color: #fff; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 4px; text-transform: uppercase; cursor: pointer; margin-top: 24px; transition: opacity 0.2s, transform 0.1s; box-shadow: 0 4px 20px rgba(26,58,107,0.25); }
+  .btn-calcular:hover { opacity: 0.9; }
+  .btn-calcular:active { transform: scale(0.99); }
+
+  /* HISTÓRICO */
+  .hist-vazio { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 12px; letter-spacing: 2px; }
+  .hist-vazio span { display: block; font-size: 40px; margin-bottom: 16px; }
+
+  .hist-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+    animation: fadeUp 0.4s ease both;
+  }
+  .hist-item:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+  .hist-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .hist-nome { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--text); }
+  .hist-data { font-size: 10px; color: var(--muted); letter-spacing: 2px; }
+  .hist-preco { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--accent2); }
+
+  .hist-detalhes { display: none; margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px; }
+  .hist-detalhes.open { display: block; }
+
+  .hist-linha { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 12px; color: var(--text2); border-bottom: 1px dashed var(--border); }
+  .hist-linha:last-child { border-bottom: none; }
+  .hist-linha .dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
+  .hist-linha-left { display: flex; align-items: center; }
+
+  .hist-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .btn-hist { flex: 1; padding: 8px; border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border); background: var(--surface); color: var(--muted); }
+  .btn-hist:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-hist.danger:hover { border-color: #c04040; color: #c04040; }
+
+  .hist-lista { display: flex; flex-direction: column; gap: 14px; }
+
+  .hist-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .hist-count { font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
+  .btn-limpar { font-size: 10px; letter-spacing: 2px; color: #c04040; background: none; border: 1px solid #e8d4d4; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-family: 'DM Mono', monospace; text-transform: uppercase; }
+
+  footer { text-align: center; margin-top: 40px; font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+  @media(max-width:520px){.resultado-grid{grid-template-columns:1fr}.despesa-row{grid-template-columns:14px 1fr 100px 34px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">NeuraOrb · Desenvolvedor de Protótipos Inteligentes</div>
+  <h1>Precifi<span>cador</span></h1>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="mudarAba('calcular')">Calcular</button>
+  <button class="tab" onclick="mudarAba('historico')" id="tabHist">Histórico</button>
+</div>
+
+<!-- ABA CALCULAR -->
+<div class="page active" id="pageCalcular">
+<div class="container">
+
+  <div class="card">
+    <div class="card-title"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c1)"></span> Produto</div>
+    <div class="field">
+      <label>Nome do produto</label>
+      <input type="text" id="nomeProduto" placeholder="Ex: Camiseta estampada">
+    </div>
+    <div class="field">
+      <label>Custo do produto (R$)</label>
+      <input type="number" id="custoProduto" placeholder="0,00" step="0.01" min="0" oninput="autoCalc()">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Despesas adicionais</div>
+    <div class="despesas-list" id="despesasList"></div>
+    <button class="btn-add" onclick="adicionarDespesa()">+ Adicionar despesa</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c4)"></span> Margem de lucro</div>
+    <div class="margem-wrap">
+      <input type="range" id="margemSlider" min="1" max="200" value="30" oninput="atualizarMargem()">
+      <div class="margem-valor" id="margemDisplay">30%</div>
+    </div>
+  </div>
+
+  <div class="grafico-card">
+    <div class="card-title">Composição do preço</div>
+    <div class="grafico-wrap"><canvas id="grafico"></canvas></div>
+    <div class="legenda" id="legenda"></div>
+  </div>
+
+  <div class="resultado-card">
+    <div class="card-title">Resultado final</div>
+    <div class="resultado-grid">
+      <div class="res-item">
+        <div class="r-dot" style="background:var(--c1)"></div>
+        <div class="r-label">Custo produto</div>
+        <div class="r-value" id="resCusto">R$ 0,00</div>
+      </div>
+      <div class="res-item">
+        <div class="r-dot" style="background:#2471a3"></div>
+        <div class="r-label">Total despesas</div>
+        <div class="r-value" id="resDespesas">R$ 0,00</div>
+      </div>
+      <div class="res-item">
+        <div class="r-dot" style="background:var(--c4)"></div>
+        <div class="r-label">Lucro estimado</div>
+        <div class="r-value verde" id="resLucro">R$ 0,00</div>
+      </div>
+    </div>
+    <div class="divisor"></div>
+    <div class="preco-final-wrap">
+      <div class="preco-final-label">Preço de venda sugerido</div>
+      <div class="preco-final" id="resFinal">R$ 0,00</div>
+    </div>
+    <button class="btn-calcular" onclick="calcular(true)">Calcular e salvar no histórico</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ABA HISTÓRICO -->
+<div class="page" id="pageHistorico">
+<div class="container">
+  <div style="max-width:700px;margin:0 auto">
+    <div class="hist-header">
+      <div class="hist-count" id="histCount">0 precificações</div>
+      <button class="btn-limpar" onclick="limparHistorico()">Limpar tudo</button>
+    </div>
+    <div class="hist-lista" id="histLista"></div>
+  </div>
+</div>
+</div>
+
+<footer>NeuraOrb · Desenvolvedor de Protótipos Inteligentes</footer>
+
+<script>
+const CORES = ['#2471a3','#1e8449','#7d3c98','#d35400','#16a085','#2e4057','#c0392b','#f39c12'];
+let despesaCount = 0;
+
+function corDespesa(i){ return CORES[i % CORES.length]; }
+
+function adicionarDespesa(){
+  const list = document.getElementById('despesasList');
+  const idx = despesaCount++;
+  const cor = corDespesa(idx);
+  const row = document.createElement('div');
+  row.className = 'despesa-row';
+  row.dataset.idx = idx;
+  row.innerHTML = `
+    <div class="despesa-cor" style="background:${cor}"></div>
+    <input type="text" placeholder="Ex: Frete / Correio" class="desc">
+    <input type="number" placeholder="0,00" class="valor" step="0.01" min="0" oninput="autoCalc()">
+    <button class="btn-remove" onclick="removerDespesa(this)">×</button>
+  `;
+  list.appendChild(row);
+  row.querySelector('.desc').focus();
+  autoCalc();
+}
+
+function removerDespesa(btn){
+  const rows = document.querySelectorAll('.despesa-row');
+  if(rows.length > 1) btn.parentElement.remove();
+  else btn.parentElement.querySelectorAll('input').forEach(i=>i.value='');
+  autoCalc();
+}
+
+function atualizarMargem(){
+  document.getElementById('margemDisplay').textContent = document.getElementById('margemSlider').value + '%';
+  autoCalc();
+}
+
+function fmt(v){ return 'R$ ' + v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+let chartInstance = null;
+
+function autoCalc(){ calcular(false); }
+
+function calcular(salvar = true){
+  const custo  = parseFloat(document.getElementById('custoProduto').value) || 0;
+  const margem = parseFloat(document.getElementById('margemSlider').value) / 100;
+  const nome   = document.getElementById('nomeProduto').value || 'Produto';
+
+  const despesas = [];
+  document.querySelectorAll('.despesa-row').forEach((row,i)=>{
+    const desc = row.querySelector('.desc').value || `Despesa ${i+1}`;
+    const val  = parseFloat(row.querySelector('.valor').value) || 0;
+    const cor  = row.querySelector('.despesa-cor').style.background;
+    despesas.push({desc, val, cor});
+  });
+
+  const totalDespesas = despesas.reduce((s,d)=>s+d.val, 0);
+  const custoTotal    = custo + totalDespesas;
+  const precoFinal    = custoTotal > 0 ? custoTotal * (1 + margem) : 0;
+  const lucro         = precoFinal - custoTotal;
+
+  document.getElementById('resCusto').textContent    = fmt(custo);
+  document.getElementById('resDespesas').textContent = fmt(totalDespesas);
+  document.getElementById('resLucro').textContent    = fmt(lucro);
+  document.getElementById('resFinal').textContent    = fmt(precoFinal);
+
+  if(salvar){
+    const el = document.getElementById('resFinal');
+    el.style.transform = 'scale(1.06)';
+    setTimeout(()=>{ el.style.transform = 'scale(1)'; }, 200);
+
+    // Salva no histórico
+    const registro = {
+      id: Date.now(),
+      nome, custo, despesas, margem: margem*100,
+      totalDespesas, custoTotal, lucro, precoFinal,
+      data: new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    };
+    salvarHistorico(registro);
+  }
+
+  renderGrafico(custo, despesas, lucro, precoFinal);
+}
+
+// ── HISTÓRICO ──
+function salvarHistorico(registro){
+  let hist = getHistorico();
+  hist.unshift(registro);
+  if(hist.length > 50) hist = hist.slice(0,50);
+  localStorage.setItem('precificador_hist', JSON.stringify(hist));
+  renderHistorico();
+  // Badge na aba
+  document.getElementById('tabHist').textContent = `Histórico (${hist.length})`;
+}
+
+function getHistorico(){
+  try { return JSON.parse(localStorage.getItem('precificador_hist')) || []; }
+  catch { return []; }
+}
+
+function limparHistorico(){
+  if(!confirm('Apagar todo o histórico?')) return;
+  localStorage.removeItem('precificador_hist');
+  renderHistorico();
+}
+
+function renderHistorico(){
+  const hist  = getHistorico();
+  const lista = document.getElementById('histLista');
+  const count = document.getElementById('histCount');
+
+  count.textContent = hist.length + (hist.length === 1 ? ' precificação' : ' precificações');
+  document.getElementById('tabHist').textContent = `Histórico${hist.length > 0 ? ' ('+hist.length+')' : ''}`;
+
+  if(hist.length === 0){
+    lista.innerHTML = `<div class="hist-vazio"><span>📋</span>Nenhuma precificação salva ainda.<br>Calcule um produto para começar.</div>`;
+    return;
+  }
+
+  lista.innerHTML = hist.map((r,i) => `
+    <div class="hist-item" id="hitem_${r.id}">
+      <div class="hist-top" onclick="toggleDetalhe(${r.id})">
+        <div>
+          <div class="hist-nome">${r.nome}</div>
+          <div class="hist-data">${r.data} · margem ${r.margem.toFixed(0)}%</div>
+        </div>
+        <div class="hist-preco">${fmt(r.precoFinal)}</div>
+      </div>
+      <div class="hist-detalhes" id="hdet_${r.id}">
+        <div class="hist-linha">
+          <div class="hist-linha-left"><div class="dot" style="background:#c0392b"></div>Custo produto</div>
+          <strong>${fmt(r.custo)}</strong>
+        </div>
+        ${r.despesas.filter(d=>d.val>0).map(d=>`
+          <div class="hist-linha">
+            <div class="hist-linha-left"><div class="dot" style="background:${d.cor}"></div>${d.desc}</div>
+            <strong>${fmt(d.val)}</strong>
+          </div>
+        `).join('')}
+        <div class="hist-linha">
+          <div class="hist-linha-left"><div class="dot" style="background:#7d3c98"></div>Lucro estimado</div>
+          <strong style="color:#22693e">${fmt(r.lucro)}</strong>
+        </div>
+        <div class="hist-actions">
+          <button class="btn-hist" onclick="carregarRegistro(${r.id})">↩ Carregar</button>
+          <button class="btn-hist danger" onclick="excluirRegistro(${r.id})">× Excluir</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleDetalhe(id){
+  const el = document.getElementById('hdet_'+id);
+  el.classList.toggle('open');
+}
+
+function excluirRegistro(id){
+  let hist = getHistorico().filter(r=>r.id !== id);
+  localStorage.setItem('precificador_hist', JSON.stringify(hist));
+  renderHistorico();
+}
+
+function carregarRegistro(id){
+  const r = getHistorico().find(r=>r.id === id);
+  if(!r) return;
+
+  document.getElementById('nomeProduto').value  = r.nome;
+  document.getElementById('custoProduto').value = r.custo;
+  document.getElementById('margemSlider').value = r.margem;
+  document.getElementById('margemDisplay').textContent = r.margem.toFixed(0) + '%';
+
+  // Limpa despesas
+  document.getElementById('despesasList').innerHTML = '';
+  despesaCount = 0;
+
+  r.despesas.forEach(d=>{
+    const list = document.getElementById('despesasList');
+    const idx = despesaCount++;
+    const cor = d.cor || corDespesa(idx);
+    const row = document.createElement('div');
+    row.className = 'despesa-row';
+    row.innerHTML = `
+      <div class="despesa-cor" style="background:${cor}"></div>
+      <input type="text" class="desc" value="${d.desc}">
+      <input type="number" class="valor" value="${d.val}" step="0.01" min="0" oninput="autoCalc()">
+      <button class="btn-remove" onclick="removerDespesa(this)">×</button>
+    `;
+    list.appendChild(row);
+  });
+
+  mudarAba('calcular');
+  autoCalc();
+}
+
+function mudarAba(aba){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  if(aba === 'calcular'){
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('pageCalcular').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('pageHistorico').classList.add('active');
+    renderHistorico();
+  }
+}
+
+function renderGrafico(custo, despesas, lucro, precoFinal){
+  const canvas = document.getElementById('grafico');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth;
+  const H = 220;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0,0,W,H);
+
+  const items = [
+    {label:'Produto', val:custo, cor:'#c0392b'},
+    ...despesas.filter(d=>d.val>0).map(d=>({label:d.desc, val:d.val, cor:d.cor})),
+    {label:'Lucro',   val:lucro, cor:'#7d3c98'},
+  ];
+
+  const total = precoFinal || 1;
+  const PAD_L=16, PAD_R=16, PAD_T=28, PAD_B=40;
+  const chartW = W-PAD_L-PAD_R;
+  const chartH = H-PAD_T-PAD_B;
+
+  // Grade
+  ctx.strokeStyle='#d4cfc4'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=PAD_T+(chartH/4)*i;
+    ctx.beginPath(); ctx.moveTo(PAD_L,y); ctx.lineTo(W-PAD_R,y); ctx.stroke();
+    const pct=((4-i)/4*total);
+    ctx.fillStyle='#7a7468'; ctx.font='9px DM Mono,monospace'; ctx.textAlign='right';
+    ctx.fillText('R$'+pct.toLocaleString('pt-BR',{maximumFractionDigits:0}), PAD_L-4, y+3);
+  }
+
+  if(items.length===0||total===0){ atualizarLegenda(items); return; }
+
+  const allItems = items.length + 1;
+  const barW = Math.min(55, chartW/allItems * 0.6);
+  const gap  = (chartW - barW*allItems) / (allItems+1);
+
+  items.forEach((item,i)=>{
+    const x = PAD_L + gap*(i+1) + barW*i;
+    const barH = (item.val/total)*chartH;
+    const y = PAD_T+chartH-barH;
+    ctx.shadowColor=item.cor+'44'; ctx.shadowBlur=10;
+    ctx.fillStyle=item.cor;
+    roundRect(ctx,x,y,barW,barH,6); ctx.fill();
+    ctx.shadowBlur=0;
+    if(barH>16){
+      ctx.fillStyle='#1c1a16'; ctx.font='bold 9px DM Mono,monospace'; ctx.textAlign='center';
+      ctx.fillText('R$'+item.val.toLocaleString('pt-BR',{maximumFractionDigits:0}), x+barW/2, y-6);
+    }
+    ctx.fillStyle='#3a3630'; ctx.font='10px DM Mono,monospace'; ctx.textAlign='center';
+    const lbl=item.label.length>9?item.label.substring(0,8)+'…':item.label;
+    ctx.fillText(lbl, x+barW/2, PAD_T+chartH+16);
+  });
+
+  // Barra total
+  const xF=PAD_L+gap*(items.length+1)+barW*items.length;
+  ctx.shadowColor='#d68910'+'55'; ctx.shadowBlur=14;
+  ctx.fillStyle='#d68910';
+  roundRect(ctx,xF,PAD_T,barW,chartH,6); ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#1c1a16'; ctx.font='bold 9px DM Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText('R$'+precoFinal.toLocaleString('pt-BR',{maximumFractionDigits:0}), xF+barW/2, PAD_T-6);
+  ctx.fillStyle='#a07020'; ctx.font='bold 10px DM Mono,monospace';
+  ctx.fillText('TOTAL', xF+barW/2, PAD_T+chartH+16);
+
+  // Linhas pontilhadas
+  ctx.setLineDash([3,4]); ctx.lineWidth=1;
+  items.forEach((item,i)=>{
+    const x=PAD_L+gap*(i+1)+barW*i;
+    const barH=(item.val/total)*chartH;
+    const y=PAD_T+chartH-barH;
+    ctx.strokeStyle=item.cor+'99';
+    ctx.beginPath(); ctx.moveTo(x+barW,y); ctx.lineTo(xF,PAD_T); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  atualizarLegenda([...items,{label:'Preço Final',val:precoFinal,cor:'#d68910'}]);
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h);
+  ctx.lineTo(x,y+h);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function atualizarLegenda(items){
+  document.getElementById('legenda').innerHTML = items.map(item=>`
+    <div class="legenda-item">
+      <div class="legenda-dot" style="background:${item.cor}"></div>
+      <span>${item.label}: <strong>${fmt(item.val)}</strong></span>
+    </div>
+  `).join('');
+}
+
+// Init
+adicionarDespesa();
+renderHistorico();
+document.addEventListener('keydown', e=>{ if(e.key==='Enter') calcular(true); });
+window.addEventListener('resize', ()=>calcular(false));
+</script>
+
+</body>
+</html>
